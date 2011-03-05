@@ -1,0 +1,60 @@
+<?xml version="1.0" standalone="no" ?>
+<!DOCTYPE guide PUBLIC "-//0x58//DTD guide//EN" "http://dtd.0x58.com/guide-01.dtd">
+<?xml-stylesheet href="./.guides.xsl" type="text/xsl" ?>
+
+<guide xmlns:xlink="http://www.w3.org/1999/xlink">
+	<title>daemontools</title>
+	<author>
+		<name>Jan-Willem Regeer</name>
+		<email user="xistence" domain="x-istence.com" />
+		<license url="http://creativecommons.org/licenses/by-nc-sa/2.5/" year="2005">Creative Commons Attribution-NonCommercial-ShareAlike 2.5 </license>
+	</author>
+	<date>2005-08-31, 11:58</date>        
+	
+	<body>
+		<section>
+			<title>General Information</title>
+			<paragraph>
+			<text>This guide will help you set up <link xlink:type="simple" xlink:href="http://cr.yp.to/" xlink:show="replace">Dan Bernstein's</link> daemontools. Which is a program that supervises another daemon so that when it does fail, it will automatically be restarted.</text>
+			</paragraph>
+		</section>
+		<section>
+			<title>Requirements</title>
+			<paragraph>
+				<text>You will need the following items to be able to complete this guide:
+					<list type="ordered">
+						<item>Root access to a FreeBSD machine</item>
+						<item>FreeBSD install with <link xlink:type="simple" xlink:href="./updatingports" xlink:show="replace">ports up-to-date</link> </item>
+					</list>
+				</text>
+			</paragraph>
+		</section>
+		<section>
+			<title>Compiling</title>
+			<paragraph>
+				<text>This is where your up-to-date ports come in handy.</text>
+				<exec>cd /usr/ports/sysutils/daemontools
+make install</exec>
+			</paragraph>
+		</section>
+		<section>
+			<title>Setting up daemontools</title>
+			<paragraph>
+				<text>There is not much to do. Create a directory, and then we also need to add an entry to /etc/rc.conf to tell it that we want to start svscan, as the master process is called, upon booting.</text>
+				<exec>mkdir /var/services</exec>
+				<config location="/etc/rc.conf">svscan_enable="YES"</config>
+			</paragraph>
+		</section>
+		<section>
+			<title>Starting svscan</title>
+			<paragraph>
+				<text>There are two ways that you can start svnscan. Reboot your system, or execute it's rc file.</text>
+				<exec>/usr/local/etc/rc.d/svscan.sh start</exec>
+				<text>It should now be running, to see if it really is running, check with ps.</text>
+				<exec>ps auxwwww | grep svscan</exec>
+				<text>You should see /usr/local/bin/svscan running. Congratulations, you successfully got daemontools running.</text>
+			</paragraph>
+		</section>
+	</body>
+</guide>
+

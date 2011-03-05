@@ -1,0 +1,92 @@
+.tip {
+        border: 1px dashed orange;
+        color: #FF3300;
+        background-color: #FFCC99;
+        margin: 10px 0px 10px 30px;
+}
+
+.exec {
+        border: 1px solid gray;
+        color: white;
+        background-color: black;
+        padding: 5px;
+        margin: 5px 0px 5px 20px;
+}
+
+.text {
+        margin: 5px 0px 5px 10px;
+}
+
+.tconfig {
+	margin: 5px 0px 5px 10px;
+}
+
+.tconfig > .config {
+	border: 1px solid gray;
+	padding: 5px;
+	padding-top: 10px;
+	margin-left: 10px;
+}
+
+.tconfig > .location {
+	top: 20px;
+	margin-left: 25px;
+	padding-left: 4px;
+	padding-right: 4px;
+	color: black;
+	background-color: white;
+	display: inline;
+	position: relative;
+}
+
+body {
+        margin: 0px;
+        padding: 0px;
+}
+
+h2 {
+        color: #990000;
+        margin: 15px 0px 15px 0px;
+}
+
+#Heading {
+        background-color: #990000;
+        color: #fff;
+        padding: 20px 20px 0px 20px ;
+        margin: 0px;
+}
+
+#Heading > #Author {
+        text-align: right;
+        padding: 0px;
+}
+
+#Author a {
+        color: #fff;
+}
+
+#Floater {
+        position: absolute;
+        border: 1px dashed black;
+        left: 2%;
+        width: 20%;
+        margin-top: 2%;
+        min-height: 600px;
+        
+}
+
+#Content {
+        position: absolute;
+        width: 74%;
+        border: 1px solid black;
+        margin: 2% 10% 10% 24%;
+        padding: 5px;
+}
+
+#Content > h2 {
+        margin-top: 0px;
+}
+
+a {
+        color: #000;
+}

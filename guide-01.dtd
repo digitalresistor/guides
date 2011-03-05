@@ -1,0 +1,77 @@
+<?xml encoding="UTF-8" ?>
+<!--
+ Guide
+ 
+ @author X-Istence <xistence@0x58.com>
+ @url http://0x58.com/
+ @copyright 2005
+ @license http://license.0x58.com/public/
+ 
+ Public Identifier "-//0x58//DTD guide//EN"
+ Link Path "http://dtd.0x58.com/guide-01.dtd"
+ Declaration:
+     <!DOCTYPE guide PUBLIC "-//0x58//DTD guide//EN" "http://dtd.0x58.com/guide-01.dtd">
+ 
+ Version History:
+ 1.1 - Added license. That way authors can let people know what license it is under. No name change, i am only one using it still.
+ 1.0 - Initial Creation
+     Some basics for any type of guide. Was originally coined for use by http://bsdguides.org/
+ -->
+
+
+<!-- Starting tag. Do note we can have multiple authors! -->
+<!ELEMENT guide (title, author+, date, revisions?, body)>
+<!ATTLIST guide
+				xmlns:xlink	CDATA	#FIXED	"http://www.w3.org/1999/xlink">
+
+<!-- Title for the guide/section of the guide -->
+<!ELEMENT title (#PCDATA)>
+<!-- Author's name -->
+<!ELEMENT author (name+, email?, license?)>
+	<!ELEMENT name (#PCDATA)>
+	<!ELEMENT email (#PCDATA)>
+	<!ATTLIST email
+					user	CDATA	#REQUIRED
+					domain	CDATA	#REQUIRED>
+        <!ELEMENT license (#PCDATA)>
+        <!ATTLIST license
+					url     CDATA   #REQUIRED>
+
+<!-- Date the guide was created on, should we include a last modified? Or can we just update this field? -->
+<!ELEMENT date (#PCDATA)>
+
+<!ELEMENT revisions (revitem+)>
+<!ELEMENT revitem (#PCDATA)>
+<!ATTLIST revitem
+				importance    CDATA   #REQUIRED>
+
+<!-- Main body where everything happens, it requires at least one section! -->
+<!ELEMENT body (section+)>
+
+<!-- Section requires a title, and a paragraph tag. -->
+<!ELEMENT section (title, paragraph)>
+
+<!-- Paragraph can contain as many of the elements text, exec, config, and or tip as one wants -->
+<!ELEMENT paragraph (text | exec | config | tip)+>
+<!ELEMENT text (#PCDATA|list|link)*>
+<!ELEMENT exec (#PCDATA)>
+<!ELEMENT config (#PCDATA)>
+<!ATTLIST config
+				location	CDATA	#REQUIRED>
+				
+<!ELEMENT tip (#PCDATA|list|link)*>
+
+<!ELEMENT list (item+)>
+<!ATTLIST list
+               type	CDATA	#REQUIRED>
+               
+<!ELEMENT item (#PCDATA|link)*>
+
+<!ELEMENT link (#PCDATA)>
+<!ATTLIST link
+               xlink:type	CDATA	#FIXED        "simple"
+               xlink:href	CDATA	#REQUIRED
+               xlink:show	CDATA	#REQUIRED>
+
+<!ENTITY spc4 "&#x20;&#x20;&#x20;&#x20;">
+<!ENTITY spc8 "&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;">

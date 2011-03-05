@@ -1,0 +1,99 @@
+<?xml version="1.0" standalone="no" ?>
+<!DOCTYPE guide PUBLIC "-//0x58//DTD guide//EN" "http://dtd.0x58.com/guide-01.dtd">
+<?xml-stylesheet href="./.guides.xsl" type="text/xsl" ?>
+
+<guide xmlns:xlink="http://www.w3.org/1999/xlink">
+	<title>Folding@Home using daemontools</title>
+	<author>
+		<name>Jan-Willem Regeer</name>
+		<email user="xistence" domain="x-istence.com" />
+		<license url="http://creativecommons.org/licenses/by-nc-sa/2.5/" year="2005">Creative Commons Attribution-NonCommercial-ShareAlike 2.5 </license>
+	</author>
+	<date>2005-10-20, 20:56</date>        
+	
+	<body>
+		<section>
+			<title>General Information</title>
+			<paragraph>
+			<text>This guide will help you set up <link xlink:type="simple" xlink:href="http://folding.stanford.edu/" xlink:show="replace">Folding@Home</link> using <link xlink:type="simple" xlink:href="http://cr.yp.to/daemontools.html" xlink:show="replace">Dan Bernstein's daemontools</link>, for easy maintenance and also so that on a server reboot folding@home automatically comes back up.</text>
+			</paragraph>
+		</section>
+		<section>
+			<title>Requirements</title>
+			<paragraph>
+				<text>You will need the following items to be able to complete this guide:
+					<list type="ordered">
+						<item>Root access to a FreeBSD machine</item>
+						<item><link xlink:type="simple" xlink:href="./daemontools" xlink:show="replace">Daemontools running</link></item>
+						<item>Linux compatibility installed</item>
+					</list>
+				</text>
+			</paragraph>
+		</section>
+		<section>
+			<title>Installing Linux Compat</title>
+			<paragraph>
+				<text>Folding@home only makes Linux binaries, if you do not have the Linux emulation mode enabled, then run the following command:</text>
+				<exec>pkg_add -r linux_base-8
+echo 'linux_enable="YES"' >> /etc/rc.conf</exec>
+				<tip>If you wish, you can compile from source, using the /usr/ports/emulators/linux_base-8/</tip>
+				<text>At this point you need to restart, for the new linux emulation mode to become enabled.</text>
+				<exec>shutdown -r now</exec>
+			</paragraph>
+		</section>
+		<section>
+			<title>Setting up Folding@home</title>
+			<paragraph>
+				<text>Here one creates the service directory and also a directory where the Folding@home client is run.</text>
+				<exec>mkdir /usr/local/folding@home/
+mkdir /usr/local/folding@home/root</exec>
+				<text>Next we need to get the binary. Yes this is the Linux binary eventhough it contains an .exe extension.</text>
+				<exec>cd /usr/local/folding@home/root/
+fetch http://www.stanford.edu/group/pandegroup/release/FAH502-Linux.exe
+chmod +x FAH502-Linux.exe
+brandelf -t Linux FAH502-Linux.exe</exec>
+				<tip>You can always get the latest version of the client at <link xlink:type="simple" xlink:href="http://folding.stanford.edu/download.html" xlink:show="replace">http://folding.stanford.edu/download.html</link></tip>
+				<exec>mkdir /usr/local/folding@home/log
+mkdir /usr/local/folding@home/env
+mkdir /usr/local/folding@home/log/main</exec>
+				<text>We create the directory structure needed for folding@home to be run under Dan Bernstein's daemontools. We also need to chown/chmod them to the right permissions:</text>
+				<exec>cd /usr/local/folding@home
+chown -R nobody:nobody root env log/main
+chmod 2755 root log log/main</exec>
+				<text>Now before doing anything else, we need to get the client set up. You need to give it a username to be able to say that you contributed, or you can stay anonymous.</text>
+			<exec>cd root
+setuidgid nobody ./FAH502-Linux.exe -configonly
+cd ..</exec>
+			<text>Next set up the run file, this is the most important file, as it runs your Folding@home client using daemontools' supervise, which will make sure it is always up.</text>
+			<exec>cat &lt;&lt; EOF &gt; run
+#!/bin/sh
+exec 2&gt;&amp;1
+exec envdir ./env sh -c '
+  cd /usr/local/folding@home/root/
+  exec setuidgid nobody /usr/bin/nice -n 20 /usr/local/folding@home/root/FAH502-Linux.exe -freeBSD
+'
+EOF
+chmod 700 run</exec>
+			<text>Logging is important. Off course we want to know how far along we are.</text>
+			<exec>cat &lt;&lt; EOF &gt; log/run
+#!/bin/sh
+exec setuidgid nobody multilog t ./main
+EOF
+chmod 700 log/run</exec>
+			</paragraph>
+		</section>
+		<section>
+			<title>Starting Folding@home</title>
+			<paragraph>
+				<text>Now, to get Folding@Home started using svscan and have it running under supervise, we have to let svscan know about our service.</text>
+				<exec>cd /var/service
+ln -s /usr/local/folding@home</exec>
+				<text>It should now be running, to see if it really is running, check with ps.</text>
+				<exec>ps auxwwww | grep -i fah</exec>
+				<text>You should see several different processes named FAH*-Core.exe, this means you are good to go. To check how long it has been running use svstat like follows:</text>
+			<exec>svstat /var/service/folding@home/</exec>
+			</paragraph>
+		</section>
+	</body>
+</guide>
+

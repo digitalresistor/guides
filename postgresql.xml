@@ -1,0 +1,72 @@
+<?xml version="1.0" standalone="no" ?>
+<!DOCTYPE guide PUBLIC "-//0x58//DTD guide//EN" "http://dtd.0x58.com/guide-01.dtd">
+<?xml-stylesheet href="./.guides.xsl" type="text/xsl" ?>
+
+<guide xmlns:xlink="http://www.w3.org/1999/xlink">
+	<title>PostgreSQL 8.0</title>
+	<author>
+		<name>Jan-Willem Regeer</name>
+		<email user="xistence" domain="x-istence.com" />
+		<license url="http://creativecommons.org/licenses/by-nc-sa/2.5/" year="2005">Creative Commons Attribution-NonCommercial-ShareAlike 2.5 </license>
+	</author>
+	<date>2005-09-21, 15:26</date>        
+	
+	<body>
+		<section>
+			<title>General Information</title>
+			<paragraph>
+			<text>This guide will help you set up, and start running <link xlink:type="simple" xlink:href="http://postgresql.org/" xlink:show="replace">PostgreSQL</link> using the ports tree.</text>
+			<tip>For information of how to use PostgreSQL try google. This guide will not help you with PostgreSQL past installing it</tip>
+			</paragraph>
+		</section>
+		<section>
+			<title>Requirements</title>
+			<paragraph>
+				<text>You will need the following items to be able to complete this guide:
+					<list type="ordered">
+						<item>Root access to a FreeBSD machine</item>
+						<item>FreeBSD install with <link xlink:type="simple" xlink:href="./updatingports" xlink:show="replace">ports up-to-date</link></item>
+					</list>
+				</text>
+			</paragraph>
+		</section>
+		<section>
+			<title>Compiling</title>
+			<paragraph>
+				<text>This is where your up-to-date ports come in handy.</text>
+				<exec>cd /usr/ports/databases/postgresql80-server/
+make install</exec>
+			</paragraph>
+		</section>
+		<section>
+			<title>Setting up PostgreSQL</title>
+			<paragraph>
+				<text>There is little to do for the PostrgreSQL set up, but these steps are required. You could go with the defaults in the rc script, but that leaves you open for attack from local untrusted users.</text>
+				<exec>mkdir /usr/local/pgsql/data
+chown pgsql:pgsql /usr/local/pgsql/data
+su -l pgsql -c "initdb -D /usr/local/pgsql/data -W -A md5"
+echo 'postgresql_enable="YES"' >> /etc/rc.conf</exec>
+				<text>This initializes the database, and lets you set the "super user" password, as well as telling PostgreSQL to only allow authentication if the client sends a md5 encrypted password. This is for security if you are going to be accessing it over the network.</text>
+			</paragraph>
+		</section>
+		<section>
+			<title>Starting PostgreSQL</title>
+			<paragraph>
+				<text>There are two ways that you can start PostgreSQL. Reboot your system, or execute it's rc file.</text>
+				<exec>/usr/local/etc/rc.d/010.postgresql.sh start</exec>
+				<text>It should now be running, to see if it really is running, check with ps.</text>
+				<exec>ps auxwwww | grep postmaster</exec>
+				<text>You should see a postmaster process running. That is what the postgresql people called their server, don't ask why!</text>
+			</paragraph>
+		</section>
+		<section>
+			<title>Using PostgreSQL</title>
+			<paragraph>
+				<text>Using PostgreSQL can be done one of two ways. One way is to install phpPgAdmin, which allows you to use a web interface to add users, add databases, and other such neat features, or one can make use of the psql tool that is available</text>
+				<exec>psql &lt;dbname&gt; &lt;username&gt;</exec>
+				<text>I will not walk you through adding users to psql, or even executing queries, there are excellent sources out there on the web just for that, one of them is the <link xlink:type="simple" xlink:href="http://postgresql.org/" xlink:show="replace">PostgreSQL documentation</link>.</text>
+			</paragraph>
+		</section>
+	</body>
+</guide>
+

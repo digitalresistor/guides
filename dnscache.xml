@@ -1,0 +1,77 @@
+<?xml version="1.0" standalone="no" ?>
+<!DOCTYPE guide PUBLIC "-//0x58//DTD guide//EN" "http://dtd.0x58.com/guide-01.dtd">
+<?xml-stylesheet href="./.guides.xsl" type="text/xsl" ?>
+
+<guide xmlns:xlink="http://www.w3.org/1999/xlink">
+	<title>djbdns dnscache</title>
+	<author>
+		<name>Bert JW Regeer</name>
+		<email user="xistence" domain="gmail.com" />
+		<license url="http://creativecommons.org/licenses/by-nc-sa/2.5/" year="2005">Creative Commons Attribution-NonCommercial-ShareAlike 2.5</license>
+	</author>
+	<date>2005-08-29, 20:29</date>        
+	
+	<body>
+		<section>
+			<title>General Information</title>
+			<paragraph>
+			<text>This guide will walk you through setting up a DJB dnscache resolver.</text>
+			</paragraph>
+		</section>
+		<section>
+			<title>Requirements</title>
+			<paragraph>
+				<text>You will need the following items to be able to complete this guide:
+					<list type="ordered">
+						<item>Root access to a FreeBSD machine</item>
+						<item>FreeBSD install with <link xlink:type="simple" xlink:href="./updatingports" xlink:show="replace">ports up-to-date</link> </item>
+						<item>Installed and running <link xlink:type="simple" xlink:href="./daemontools" xlink:show="replace">daemontools (svscan)</link> </item>
+					</list>
+				</text>
+			</paragraph>
+		</section>
+		<section>
+			<title>Compiling</title>
+			<paragraph>
+				<text>Here is where your up to date port tree comes in handy, this we are just going to compile the djbdns package. From the options that show up, pick those that you wish to apply, the standards should suffice, unless you wish to host ipv6 IP addresses using tinydns, in which case you might want to select that.</text>
+				<exec>cd /usr/ports/dns/djbdns
+make install</exec>
+				<tip>If you want to change what you compiled djbdns with next time, but it says that you have a saved config. Type "make rmconfig" to remove the saved options, and the next time you compile again, you will once again be asked for the options</tip>
+			</paragraph>
+		</section>
+		<section>
+			<title>Adding required users/groups</title>
+			<paragraph>
+				<text>We are adding the following groups/users to be used when configuring dnscache. If you do not add these users, you can't use dnscache!</text>
+				<exec>pw groupadd nofiles -g 800
+pw useradd dnslog -u 810 -g 800 -c "Logging for dns" -d /usr/local/djbdns/ -s /sbin/nologin
+pw useradd dnscache -u 811 -g 800 -c "dnscache" -d /usr/local/djbdns/ -s /sbin/nologin</exec>
+				<tip>Look at "pw userdel help" for info on removing these users if you decide to undo this entire install.</tip>
+			</paragraph>
+		</section>
+		<section>
+			<title>Setting up dnscache</title>
+			<paragraph>
+				<text>You can install dnscache anywhere. My personal place to put all of my tinydns/dnscache instances is in /usr/local/djbdns, so if you want yours elsewhere, please modify the following commands</text>
+				<exec>mkdir /usr/local/djbdns
+dnscache-conf dnscache dnslog /usr/local/djbdns/dnscache 127.0.0.1</exec>
+				<text>This tells dnscache it should create the directory with everything in it at /usr/local/djbdns/dnscache, using dnscache as the user to run under when started with svnscan, and to use dnslog as the user to write the log files to the HD with. The ip address on the end is the IP it has to bind to when it starts up. If you want to let other clients connect to your dnscache server to resolve their stuff, then you need to bind it to an outward facing IP.</text>
+			</paragraph>
+		</section>
+		<section>
+			<title>Starting dnscache</title>
+			<paragraph>
+				<text>Tell svnscan about dnscache. Then wait 5 seconds, and dnscache should be running.</text>
+				<exec>ln -s /usr/local/djbdns/dnscache /var/service</exec>
+				<text>Well, since it is now hopefully running, we should test if it works.</text>
+				<exec>dig @127.0.0.1 0x58.com</exec>
+				<text>If you get an answer, pat yourself on the back, as dnscache is properly running, unless off course BIND answered that, but unless you enabled BIND, it should not be running. To set your dnscache as your nameserver for the entire OS, add an entry to /etc/resolv.conf</text>
+				<config location="/etc/resolv.conf">nameserver 127.0.0.1</config>
+				<text>Now do the test with dig again, this time leave out the @ symbol, and look for ;; SERVER: 127.0.0.1#53(127.0.0.1)</text>
+				<exec>dig 0x58.com</exec>
+				<text>That's it!</text>
+			</paragraph>
+		</section>
+	</body>
+</guide>
+

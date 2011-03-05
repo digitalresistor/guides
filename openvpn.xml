@@ -1,0 +1,181 @@
+<?xml version="1.0" standalone="no" ?>
+<!DOCTYPE guide PUBLIC "-//0x58//DTD guide//EN" "http://dtd.0x58.com/guide-01.dtd">
+<?xml-stylesheet href="./.guides.xsl" type="text/xsl" ?>
+
+<guide xmlns:xlink="http://www.w3.org/1999/xlink">
+	<title>OpenVPN 2</title>
+	<author>
+		<name>Bert JW Regeer</name>
+		<email user="xistence" domain="x-istence.com" />
+		<license url="http://creativecommons.org/licenses/by-nc-sa/2.5/" year="2007">Creative Commons Attribution-NonCommercial-ShareAlike 2.5 </license>
+	</author>
+	<date>2007-12-19, 03:02</date>        
+	
+	<body>
+		<section>
+			<title>General Information</title>
+			<paragraph>
+			<text>This guide will help you set up <link xlink:type="simple" xlink:href="http://openvpn.net/" xlink:show="replace">OpenVPN</link> to allow remote users to securely connect to the internal lan or use the VPN tunnel as an endpoint when on insecure wireless access points, allowing safe transmission of data without worries of being sniffed or intercepted.</text>
+			</paragraph>
+		</section>
+		<section>
+			<title>Requirements</title>
+			<paragraph>
+				<text>You will need the following items to be able to complete this guide:
+					<list type="ordered">
+						<item>Root access to a FreeBSD machine</item>
+						<item>FreeBSD install with <link xlink:type="simple" xlink:href="./updatingports" xlink:show="replace">ports up-to-date</link></item>
+						<item>Bash installed</item>
+					</list>
+				</text>
+			</paragraph>
+		</section>
+		<section>
+			<title>Compiling</title>
+			<paragraph>
+				<text>We only have one thing to compile.</text>
+				<exec>cd /usr/ports/security/openvpn
+make install clean</exec>
+			</paragraph>
+		</section>
+		<section>
+			<title>Server Configuration</title>
+			<paragraph>
+				<text>First things first, we need a directory to store the configuration files and keys, so lets create that directory structure</text>
+				<exec>cd /usr/local/etc/
+mkdir openvpn
+cd openvpn
+openvpn --genkey --secret ta.key
+mkdir easy-rsa
+mkdir cert</exec>
+				<text>We need to copy over the reference files for easy-rsa, since OpenVPN is very picky about how it wants it's certificate authority, and other such items.</text>
+				<exec>cd /usr/local/etc/openvpn/easy-rsa
+cp -r /usr/local/share/doc/openvpn/easy-rsa/2.0/ .</exec>
+				<text>Next up, the file vars that was moved into the directory has to be created/modified to suite your needs. You may copy the text below and paste it into a completely new file overwriting the old one</text>
+				<config location="/usr/local/openvpn/easy-rsa/vars">export EASY_RSA="`pwd`"
+export KEY_CONFIG="$EASY_RSA/openssl.cnf"
+export KEY_DIR="/usr/local/etc/openvpn/cert"
+# Issue rm -rf warning
+echo NOTE: If you run ./clean-all, I will be doing a rm -rf on $KEY_DIR
+export KEY_SIZE=2048
+export CA_EXPIRE=3650
+export KEY_EXPIRE=3650
+export KEY_COUNTRY="US"
+export KEY_PROVINCE="NY"
+export KEY_CITY="New York"
+export KEY_ORG="OrgName"
+export KEY_EMAIL="email@example.net"</config>
+				<text>At this point in time, if you are not using bash, you will need to switch to bash as your shell</text>
+				<exec>bash</exec>
+				<text>Now load the vars file you just created. It will give you a warning you may want to heed. Only do clean-all when you are certain you need it.</text>
+				<exec>. ./vars</exec>
+				<text>Now we can go ahead and build the required Certificate Authority and the server keys. Follow the instructions and fill in the required fields, or just hit enter if they are correct (you did set the vars file up, right?)</text>
+				<exec>bash build-ca
+bash build-key-server server
+bash build-dh</exec>
+				<text>Next up we create the beast that is the openvpn.conf file. The comments have been removed, for brevity. The OpenVPN Howto contains <link xlink:type="simple" xlink:href="http://openvpn.net/howto.html#examples" xlink:show="replace">an example config</link> file, which also explains all the options available and what they do.</text>
+				<config location="/usr/local/etc/openvpn/openvpn.conf">;local a.b.c.d
+port 1194
+;proto tcp
+proto udp
+dev tun
+ca cert/ca.crt
+cert cert/server.crt
+key cert/server.key  # This file should be kept secret
+dh cert/dh2048.pem
+server 10.8.0.0 255.255.255.0
+ifconfig-pool-persist ipp.txt
+;push "route 192.168.20.0 255.255.255.0"
+push "redirect-gateway"
+push "dhcp-option DNS 4.2.2.2"
+;push "dhcp-option WINS 10.8.0.1"
+keepalive 10 120
+
+# For extra security beyond that provided
+# by SSL/TLS, create an "HMAC firewall"
+# to help block DoS attacks and UDP port flooding.
+#
+# Generate with:
+#   openvpn --genkey --secret ta.key
+#
+# The server and each client must have
+# a copy of this key.
+# The second parameter should be 0
+# on the server and 1 on the clients.
+tls-auth ta.key 0 # This file is secret
+
+comp-lzo
+max-clients 20
+
+user nobody
+group nobody
+persist-key
+persist-tun
+status openvpn-status.log
+verb 3
+mute 10</config>
+				<text>Next up, we need to add it to rc.conf so that the service will be started upon boot.</text>
+				<config location="/etc/rc.conf">openvpn_enable="YES"</config>
+				<text>This should now allow us to start the OpenVPN service by using it's rc.d script. It won't do us much good until we generate some private/public key pairs on a client to allow them to connect. The command is included for demonstration purposes only.</text>
+				<exec>/usr/local/etc/rc.d/openvpn start</exec>
+				<text>For the OpenVPN client to be able to connect to the server, you need to open port 1149 protocol UDP and allow it inbound. For clients to be able to use your new OpenVPN server as their gateway (config file as created above does just that) you will need to provide some nat rules. The following included rules are for pf.</text>
+				<config location="/etc/pf.conf">vpn_if="tun0"
+					
+nat on $ext_if from 10.8.0.0/24 to any -> ($ext_if)
+
+pass in quick proto udp from any to port 1194 keep state label "openvpn"
+
+# Pass stuff on the VPN interface
+pass quick on $vpn_if keep state</config>
+			</paragraph>
+		</section>
+		<section>
+			<title>Client Configuration</title>
+			<paragraph>
+				<text>On the client we need to generate a private key, as well as a certificate signing request, or CSR. Create a new directory .openvpn to hold all the files. When OpenSSL asks you for the Organization name, you need to fill in the same value as you used to create the server key, which was also set as KEY_ORG in the vars file. When it requests a common name, use your full name, or a derivation thereof, all common names have to be unique, and if yours is not you will not be allowed to connect to the OpenVPN server.</text>
+				<exec>mkdir ~/.openvpn
+cd ~/.openvpn
+openssl req -days 3650 -new -keyout openvpn.key -out openvpn.csr</exec>
+				<text>Now you need to transfer the openvpn.csr to the server and put it in the cert directory (/usr/local/etc/openvpn/cert/), give it a meaningful name, and sign the CSR with the Certificate Authority. Use bash again. For the purposes of this guide, I have named the file example.csr</text>
+				<exec>bash</exec>
+				<text>And now we load vars again</text>
+				<exec>cd /usr/local/etc/openvpn/easy-rsa/
+. ./vars</exec>
+				<text>Sign it</text>
+				<exec>bash sign-req ../cert/example</exec>
+				<text>After you follow the instructions, you want to grab two things from the server and transfer them back to the client. <list type="unordered">
+					<item>ca.crt - Required so that your newly signed cert can be verified as being real</item>
+					<item>example.crt - Was created by signing the CSR</item>
+					<item>ta.key - Transfer this securely, if this falls in the wrong hands it could lead to easier breaking into encrypted streams</item>
+					</list>
+Rename example.crt back to openvpn.crt, so that you won't need to modify the client side config file.
+				</text>
+				<config location="~/.openvpn/client.conf">client
+dev tun
+proto udp
+
+remote [IP address or hostname] 1194
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+
+ca [homedir]/.openvpn/ca.crt
+cert [homedir]/.openvpn/openvpn.crt
+key [homedir]/.openvpn/openvpn.key
+
+ns-cert-type server
+
+tls-auth [homedir]/.openvpn/ta.key 1
+comp-lzo
+verb 3
+mute 10</config>
+			<text>You will need to replace [homedir] with your full path to your home directory, and change the IP address and or hostname to something that makes sense for you. If the server is publicly available over the internet and has a domain name assigned to it, you may use that instead.</text>
+			<text>The client is all set to go. All you have to do now is become root (so you can dynamically allocate a tun/tap device. You can statically set a device if you want. Read the OpenVPN <link xlink:type="simple" xlink:href="http://openvpn.net/howto.html#examples" xlink:show="replace">examples</link>)</text>
+			<exec>openvpn --config [homedir]/.openvpn/client.conf</exec>
+			<text>If you are connected to anything like instant messaging clients, you will be disconnected as the OS starts to send packets over the new gateway.</text>
+			</paragraph>
+		</section>
+	</body>
+</guide>
+

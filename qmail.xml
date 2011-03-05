@@ -1,0 +1,51 @@
+<?xml version="1.0" standalone="no" ?>
+<!DOCTYPE guide PUBLIC "-//0x58//DTD guide//EN" "http://dtd.0x58.com/guide-01.dtd">
+<?xml-stylesheet href="./.guides.xsl" type="text/xsl" ?>
+
+<guide xmlns:xlink="http://www.w3.org/1999/xlink">
+	<title>qmail 1.03 with SMTP-auth</title>
+	<author>
+		<name>Jan-Willem Regeer</name>
+		<email user="xistence" domain="x-istence.com" />
+		<license url="http://creativecommons.org/licenses/by-nc-sa/2.5/" year="2005">Creative Commons Attribution-NonCommercial-ShareAlike 2.5 </license>
+	</author>
+	<date>2005-09-21, 20:53</date>        
+	
+	<body>
+		<section>
+			<title>General Information</title>
+			<paragraph>
+			<text>This guide will help you set up <link xlink:type="simple" xlink:href="http://cr.yp.to/qmail.html" xlink:show="replace">qmail 1.03</link> to recieve mail for local users, if you would like to do virtualdomains, please follow this guide, and check the links at the bottom of this guide for further material that you can use to get that up and running.</text>
+			<tip>This is not the same as <link xlink:type="simple" xlink:href="http://lifewithqmail.org/" xlink:show="replace">http://lifewithqmail.org/</link>. Asking questions on the qmail mailling list about this guide, will probably get you sent to lifewithqmail. If you need help, and it is generic help, and not anything that this guide has told you to do, then don't feel bad asking them a question, all further questions about this guide should be directed towards the author.</tip>
+			</paragraph>
+		</section>
+		<section>
+			<title>Requirements</title>
+			<paragraph>
+				<text>You will need the following items to be able to complete this guide:
+					<list type="ordered">
+						<item>Root access to a FreeBSD machine</item>
+						<item>FreeBSD install with <link xlink:type="simple" xlink:href="./updatingports" xlink:show="replace">ports up-to-date</link></item>
+						<item><link xlink:type="simple" xlink:href="./daemontools" xlink:show="replace">Daemontools running</link></item>
+					</list>
+				</text>
+			</paragraph>
+		</section>
+		<section>
+			<title>Compiling</title>
+			<paragraph>
+				<text>This is where your up-to-date ports come in handy.</text>
+				<exec>cd /usr/ports/mail/qmail
+make extract patch WITH_QMAILQUEUE_PATCH=true WITH_BIG_TODO_PATCH=true WITH_OUTGOINGIP_PATCH=true WITHOUT_RCDLINK=true BATCH=yes</exec>
+				<text>Now we need to get the diff file for qmail-smtpd, so that we can add in auth support</text>
+				<exec>cd ./work/qmail-1.03
+fetch http://0x58.com/guides/patches/qmail-smtpd-auth.patch
+patch &lt; qmail-smtpd-auth.patch
+cd ../..</exec>
+				<text>That is it for the patching. qmail-smtpd should now be patched, and contain the necessary code for smtp-auth.</text>
+				<exec>make all install</exec>
+			</paragraph>
+		</section>
+	</body>
+</guide>
+
